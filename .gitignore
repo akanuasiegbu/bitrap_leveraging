@@ -10,3 +10,4 @@ checkpoints
 outputs
 ipython_notebook/gaussian_NP_PIE_viz/
 models
+.gitignore

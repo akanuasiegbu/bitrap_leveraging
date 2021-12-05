@@ -1,0 +1,1 @@
+python tools/test.py --config_file configs/corridor.yml CKPT_DIR /home/akanu/checkpoints/JAAD_checkpoints/goal_cvae_checkpoints/wandb_unimodal_corridor/corridor_input_25_output_25.pth

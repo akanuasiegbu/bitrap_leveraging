@@ -15,7 +15,8 @@ _C.VISUALIZE = False
 _C.PRINT_INTERVAL = 20
 # ------ MODEL ---
 _C.MODEL = CN()
-_C.MODEL.INPUT_LEN = 15 # for 30 fps, 15 is 0.5 second
+# _C.MODEL.INPUT_LEN = 15 # for 30 fps, 15 is 0.5 second
+_C.MODEL.INPUT_LEN = 5
 _C.MODEL.PRED_LEN = 15 # for 30 fps, 15 is 0.5 second
 _C.MODEL.GLOBAL_EMBED_SIZE = 8
 _C.MODEL.LOCAL_EMBED_SIZE = 128
@@ -52,6 +53,7 @@ _C.MODEL.KL_MIN = 0.07
 # ----- DATASET -----
 _C.DATASET = CN()
 _C.DATASET.NAME = 'JAAD'
+_C.DATASET.NAME_SECOND = 'NONE'
 _C.DATASET.ETH_CONFIG = ''
 _C.DATASET.ROOT = '/mnt/workspace/datasets/JAAD/'
 _C.DATASET.TRAJECTORY_PATH = '/mnt/workspace/datasets/JAAD/trajectories/'

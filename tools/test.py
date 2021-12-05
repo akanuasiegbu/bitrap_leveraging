@@ -1,20 +1,22 @@
 import pdb
 import os
 import sys
-sys.path.remove('/home/brianyao/Documents/intention2021icra')
+#sys.path.remove('/home/brianyao/Documents/intention2021icra')
+# work dda
 sys.path.append(os.path.realpath('.'))
 import torch
 from torch import nn, optim
 from torch.nn import functional as F
 
 import pickle as pkl
-from datasets import make_dataloader
+from datasets import make_dataloader, make_dataloader_custom_data
 from bitrap.modeling import make_model
 from bitrap.engine import build_engine
 
 
 from bitrap.utils.logger import Logger
 import logging
+import time
 
 import argparse
 from configs import cfg
@@ -42,7 +44,18 @@ def main(cfg):
         logger = logging.Logger("MPED_RNN")
     
     # get dataloaders
-    test_dataloader = make_dataloader(cfg, 'test')
+    # test_dataloader = make_dataloader(cfg, 'test')
+    # test_dataloader_av = make_dataloader_custom_data(cfg, 'test')
+
+    test_dataloader = make_dataloader_custom_data(cfg =cfg, split ='test', dataset =cfg.DATASET.NAME_SECOND)
+    # # print(test_dataloader.xx[:5])
+    # i = 0
+    # for data, data_av in zip(test_dataloader, test_dataloader_av):
+    #     print(data)
+    #     i +=1
+    #     if i == 1:
+    #         break
+    # quit()
     
     if hasattr(logger, 'run_id'):
         run_id = logger.run_id
@@ -50,8 +63,9 @@ def main(cfg):
         run_id = 'no_wandb'
     _, _, inference = build_engine(cfg)
     
-    inference(cfg, 0, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=True, test_mode=True)
+    # inference(cfg, 0, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=True, test_mode=True)
 
+    inference(cfg, 0, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=True, test_mode=True, custom=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
@@ -75,7 +89,10 @@ if __name__ == '__main__':
     cfg.merge_from_list(args.opts)
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
+    ss_start = time.time()
     main(cfg)
+    ss_end = time.time()
+    print(ss_end-ss_start) 
 
     # NOTE: define all the ckpt we want to check
     # all_ckpts = ['data/ETH_UCY_trajectron/checkpoints/goal_cvae_checkpoints/yh58kusd/Epoch_{}.pth'.format(str(i).zfill(3)) for i in range(1, 16)]

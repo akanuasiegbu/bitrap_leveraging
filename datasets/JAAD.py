@@ -33,13 +33,16 @@ class JAADDataset(data.Dataset):
                  'kfold_params': {'num_folds': 5, 'fold': 1}}
         traj_model_opts = {'normalize_bbox': True,
                        'track_overlap': 0.5,
-                       'observe_length': 15,
-                       'predict_length': 45,
+                    #    'observe_length': 15,
+                    #    'predict_length': 45, # seems like would need to fix this to be dyanmic
+                       'observe_length': 5,
+                       'predict_length': 1,
                        'enc_input_type': ['bbox'],
                        'dec_input_type': [], #['intention_prob', 'obd_speed'],
                        'prediction_type': ['bbox'] 
                        }
-        self.downsample_step = int(30/self.cfg.DATASET.FPS)
+        self.downsample_step = int(30/self.cfg.DATASET.FPS) 
+        # comes into play when generarting bbox
         imdb = JAAD(data_path=self.root)
         beh_seq = imdb.generate_data_trajectory_sequence(self.split, **data_opts)
         self.data = self.get_data(beh_seq, **traj_model_opts)

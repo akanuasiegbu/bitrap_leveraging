@@ -1,0 +1,55 @@
+PROJECT: 'corridor_np_jaad_unimodal'
+CKPT_DIR: 'checkpoints/JAAD_checkpoints/goal_cvae_checkpoints/wandb_unimodal_corridor'
+OUT_DIR: 'outputs/JAAD_outputs/goal_cvae_outputs/corridor_unimodal'
+DEVICE: 'cuda'
+METHOD: 'BiTraPNP'
+VISUALIZE: False #added/changed
+USE_WANDB: False
+MODEL:
+  IMG_SIZE: (256,256)
+  BEST_OF_MANY: True
+  K: 1
+  LATENT_DIST: 'gaussian' 
+  LATENT_DIM: 32 
+
+  # PRED_LEN: 45 # input and pred_len is defined in 30FPS
+  INPUT_LEN: 25 
+  PRED_LEN: 25 # input and pred_len is defined in 30FPS
+  GLOBAL_EMBED_SIZE: 256
+  GLOBAL_HIDDEN_SIZE:  256
+  GLOBAL_INPUT_DIM: 4
+  DROPOUT: 0.0
+
+  WITH_FLOW: False
+  ENC_CONCAT_TYPE: 'average'
+  INPUT_EMBED_SIZE: 256
+  FLOW_EMBED_SIZE: 256
+  FLOW_HIDDEN_SIZE: 256
+  ENC_HIDDEN_SIZE: 256
+  DEC_INPUT_SIZE: 256
+  DEC_HIDDEN_SIZE: 256
+  DEC_OUTPUT_DIM: 4
+DATASET:
+  NAME: 'JAAD'
+  NAME_SECOND: 'corridor'
+  # NAME: 'Avenue'
+  ROOT: '/mnt/workspace/datasets/JAAD/'
+#  ROOT: '/home/akanu/akanu/temp_pointer_storage_data/JAAD/'
+#  ROOT: '/home/akanu/temp_storage_data/JAAD/'
+  TRAJECTORY_PATH: '/mnt/workspace/datasets/JAAD/trajectories/'
+#  TRAJECTORY_PATH: '/home/akanu/akanu/temp_pointer_storage_data/JAAD/trajectories/'
+#  TRAJECTORY_PATH:  '/home/akanu/temp_storage_data/JAAD/trajectories/'
+  BBOX_TYPE: 'cxcywh' # bbox is in cxcywh format
+  NORMALIZE: 'zero-one' 
+  MIN_BBOX: [0,0,0,0] # the min of cxcywh or x1x2y1y2
+  MAX_BBOX: [1920, 1080, 1920, 1080] # the max of cxcywh or x1x2y1y2
+DATALOADER:
+  NUM_WORKERS: 24
+SOLVER:
+  MAX_EPOCH: 150
+  BATCH_SIZE: 128
+  LR: 0.001
+  scheduler: 'plateau'
+TEST:
+  BATCH_SIZE: 1024
+  # BATCH_SIZE: 30

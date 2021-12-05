@@ -11,7 +11,7 @@ from torch.nn import functional as F
 
 import pickle as pkl
 # sys.path.remove('/home/brianyao/Documents/intention2021icra')
-from datasets import make_dataloader
+from datasets import make_dataloader, make_dataloader_custom_data
 
 from bitrap.modeling import make_model
 
@@ -76,9 +76,24 @@ def main():
             }
     
     # get dataloaders
-    train_dataloader = make_dataloader(cfg, 'train')
-    val_dataloader = make_dataloader(cfg, 'val')
-    test_dataloader = make_dataloader(cfg, 'test')
+    # train_dataloader = make_dataloader(cfg, 'train')
+    # val_dataloader = make_dataloader(cfg, 'val')
+    # test_dataloader = make_dataloader(cfg, 'test')
+
+    train_dataloader = make_dataloader_custom_data(cfg = cfg,split='train', dataset =cfg.DATASET.NAME_SECOND)
+    val_dataloader = make_dataloader_custom_data(cfg = cfg, split='val', dataset =cfg.DATASET.NAME_SECOND)
+    test_dataloader = make_dataloader_custom_data(cfg =cfg, split='test', dataset =cfg.DATASET.NAME_SECOND)
+
+
+    # i = 0
+    # for trains, vals,tests, tests_norm in zip(train_dataloader, val_dataloader, test_dataloader, test_dataloader_norm):
+    #     print(trains)
+    #     i +=1
+    #     if i == 1:
+    #         break
+    # quit()
+
+
     print('Dataloader built!')
     # get train_val_test engines
     do_train, do_val, inference = build_engine(cfg)
@@ -134,8 +149,10 @@ def main():
         do_train(cfg, epoch, model, optimizer, train_dataloader, cfg.DEVICE, logger=logger, lr_scheduler=lr_scheduler)
         val_loss = do_val(cfg, epoch, model, val_dataloader, cfg.DEVICE, logger=logger)
         if (epoch+1) % 1 == 0:
-            inference(cfg, epoch, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=False)
-            
+            # inference(cfg, epoch, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=False)
+            inference(cfg, epoch, model, test_dataloader, cfg.DEVICE, logger=logger, eval_kde_nll=False, test_mode=False, custom=True)
+
+
         torch.save(model.state_dict(), os.path.join(save_checkpoint_dir, 'Epoch_{}.pth'.format(str(epoch).zfill(3))))
 
         # update LR

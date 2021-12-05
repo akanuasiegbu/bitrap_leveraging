@@ -29,8 +29,8 @@ def do_train(cfg, epoch, model, optimizer, dataloader, device, logger=None, lr_s
         for iters, batch in enumerate(tqdm(dataloader), start=1):
             X_global = batch['input_x'].to(device)
             y_global = batch['target_y'].to(device)
-            img_path = batch['cur_image_file']
-            resolution = batch['pred_resolution'].numpy()
+            # img_path = batch['cur_image_file']
+            # resolution = batch['pred_resolution'].numpy()
 
             # For ETH_UCY dataset only
             if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
@@ -88,7 +88,7 @@ def do_val(cfg, epoch, model, dataloader, device, logger=None):
         for iters, batch in enumerate(tqdm(dataloader), start=1):
             X_global = batch['input_x'].to(device)
             y_global = batch['target_y'].to(device)
-            img_path = batch['cur_image_file']
+            # img_path = batch['cur_image_file']
             # For ETH_UCY dataset only
             if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
                 input_x = batch['input_x_st'].to(device)
@@ -131,9 +131,9 @@ def do_val(cfg, epoch, model, dataloader, device, logger=None):
         print(info)
     return loss_val
 
-def inference(cfg, epoch, model, dataloader, device, logger=None, eval_kde_nll=False, test_mode=False):
+def inference(cfg, epoch, model, dataloader, device, logger=None, eval_kde_nll=False, test_mode=False, custom=False):
     model.eval()
-    all_img_paths = []
+    all_img_paths = [] # added change
     all_X_globals = []
     all_pred_goals = []
     all_gt_goals = []
@@ -141,17 +141,27 @@ def inference(cfg, epoch, model, dataloader, device, logger=None, eval_kde_nll=F
     all_gt_trajs = []
     all_distributions = []
     all_timesteps = []
-    if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
-        viz = Visualizer(mode='plot')
-    else:
-        viz = Visualizer(mode='image')
-    
+    # if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
+    #     viz = Visualizer(mode='plot')
+    # else:
+    #     viz = Visualizer(mode='image')
+    if custom:
+        all_video_files = []
+        all_abnormal_ped_pred = []
+        all_abnormal_ped_input = []
+        all_abnormal_gt_frame = []
+        all_id_x =[]
+        all_id_y = []
+        all_frame_x = []
+        all_frame_y =[]
+
     with torch.set_grad_enabled(False):
         for iters, batch in enumerate(tqdm(dataloader), start=1):
             X_global = batch['input_x'].to(device)
             y_global = batch['target_y']
-            img_path = batch['cur_image_file']
-            resolution = batch['pred_resolution'].numpy()
+            if not custom:
+                img_path = batch['cur_image_file'] #added
+                resolution = batch['pred_resolution'].numpy()
             
             # For ETH_UCY dataset only
             if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
@@ -172,28 +182,53 @@ def inference(cfg, epoch, model, dataloader, device, logger=None, eval_kde_nll=F
             # transfer back to global coordinates
             ret = post_process(cfg, X_global, y_global, pred_traj, pred_goal=pred_goal, dist_traj=dist_traj, dist_goal=dist_goal)
             X_global, y_global, pred_goal, pred_traj, dist_traj, dist_goal = ret
-            all_img_paths.extend(img_path)
             all_X_globals.append(X_global)
             all_pred_goals.append(pred_goal)
             all_pred_trajs.append(pred_traj)
             all_gt_goals.append(y_global[:, -1])
             all_gt_trajs.append(y_global)
-            all_timesteps.append(batch['timestep'].numpy())
+            if not custom:
+                all_img_paths.extend(img_path) # added change
+                all_timesteps.append(batch['timestep'].numpy())
+            if custom:
+                all_video_files.append(batch['video_file'].numpy())
+                all_abnormal_ped_pred.append(batch['abnormal_ped_pred'].numpy())
+                all_abnormal_ped_input.append(batch['abnormal_ped_input'].numpy())
+                all_abnormal_gt_frame.append(batch['abnormal_gt_frame'].numpy())
+                all_id_x.append(batch['id_x'].numpy())
+                all_id_y.append(batch['id_y'].numpy())
+                all_frame_x.append(batch['frame_x'].numpy())
+                all_frame_y.append(batch['frame_y'].numpy())
+
             if dist_traj is not None:
                 all_distributions.append(dist_traj)
             else:
                 all_distributions.append(dist_goal)
-            if cfg.VISUALIZE and iters % max(int(len(dataloader)/5), 1) == 0:
-                viz_results(viz, X_global, y_global, pred_traj, img_path, dist_goal, dist_traj, 
-                            bbox_type=cfg.DATASET.BBOX_TYPE, normalized=False, logger=logger, name='pred_test')
+            # if cfg.VISUALIZE and iters % max(int(len(dataloader)/5), 1) == 0:
+            #     viz_results(viz, X_global, y_global, pred_traj, img_path, dist_goal, dist_traj, 
+            #                 bbox_type=cfg.DATASET.BBOX_TYPE, normalized=False, logger=logger, name='pred_test')
         
+        # Uncommen here
         # Evaluate
         all_X_globals = np.concatenate(all_X_globals, axis=0)
         all_pred_goals = np.concatenate(all_pred_goals, axis=0)
         all_pred_trajs = np.concatenate(all_pred_trajs, axis=0)
         all_gt_goals = np.concatenate(all_gt_goals, axis=0)
         all_gt_trajs = np.concatenate(all_gt_trajs, axis=0)
-        all_timesteps = np.concatenate(all_timesteps, axis=0)
+        if not custom:
+            all_timesteps = np.concatenate(all_timesteps, axis=0)
+        if custom:
+            all_video_files = np.concatenate(all_video_files, axis=0)
+            all_abnormal_ped_input = np.concatenate(all_abnormal_ped_input, axis=0)
+            all_abnormal_ped_pred = np.concatenate(all_abnormal_ped_pred, axis=0)
+            all_abnormal_gt_frame = np.concatenate(all_abnormal_gt_frame, axis=0)
+            all_id_x = np.concatenate(all_id_x, axis=0)
+            all_id_y = np.concatenate(all_id_y, axis=0)
+            all_frame_x = np.concatenate(all_frame_x, axis=0)
+            all_frame_y = np.concatenate(all_frame_y, axis=0)
+        
+
+
         if hasattr(all_distributions[0], 'mus'):
             distribution = model.GMM(torch.cat([d.input_log_pis for d in all_distributions], axis=0),
                                     torch.cat([d.mus for d in all_distributions], axis=0),
@@ -216,12 +251,29 @@ def inference(cfg, epoch, model, dataloader, device, logger=None, eval_kde_nll=F
 
         if test_mode:
             # save inputs, redictions and targets for test mode
-            outputs = {'img_path': all_img_paths, 'X_global': all_X_globals, 'timestep': all_timesteps,
-                       'pred_trajs': all_pred_trajs, 'gt_trajs':all_gt_trajs,'distributions':distribution}
+            # outputs = {'img_path': all_img_paths, 'X_global': all_X_globals, 'timestep': all_timesteps,  
+            #            'pred_trajs': all_pred_trajs, 'gt_trajs':all_gt_trajs,'distributions':distribution} #added change
+            if custom:
+                outputs = { 'X_global': all_X_globals, 'video_file': all_video_files,'abnormal_ped_pred':  all_abnormal_ped_pred,
+                            'abnormal_ped_input':  all_abnormal_ped_input, 'abnormal_gt_frame':all_abnormal_gt_frame,
+                            'id_x':all_id_x, 'id_y': all_id_y , 'frame_x':all_frame_x, 'frame_y':all_frame_y,
+                            'pred_trajs': all_pred_trajs, 'gt_trajs':all_gt_trajs,'distributions':distribution}
+            else:
+                outputs = {'X_global': all_X_globals, 'timestep': all_timesteps,
+                            'pred_trajs': all_pred_trajs, 'gt_trajs':all_gt_trajs,'distributions':distribution}
 
             if not os.path.exists(cfg.OUT_DIR):
                 os.makedirs(cfg.OUT_DIR)
-            output_file = os.path.join(cfg.OUT_DIR, '{}_{}.pkl'.format(cfg.MODEL.LATENT_DIST, cfg.DATASET.NAME))
+            
+            # Need to uncomment this to be able to work
+            if custom:
+                # output_file = os.path.join(cfg.OUT_DIR, '{}_{}_in_{}_out_{}_K_{}_skip_{}.pkl'.format(cfg.MODEL.LATENT_DIST, cfg.DATASET.NAME_SECOND, cfg.MODEL.INPUT_LEN,
+                #                                                                         cfg.MODEL.PRED_LEN, cfg.MODEL.K, cfg.MODEL.INPUT_LEN))
+                output_file = os.path.join(cfg.OUT_DIR, '{}_{}_in_{}_out_{}_K_{}.pkl'.format(cfg.MODEL.LATENT_DIST, cfg.DATASET.NAME_SECOND, cfg.MODEL.INPUT_LEN,
+                                                                                        cfg.MODEL.PRED_LEN, cfg.MODEL.K))
+            else:
+                output_file = os.path.join(cfg.OUT_DIR, '{}_{}.pkl'.format(cfg.MODEL.LATENT_DIST, cfg.DATASET.NAME))
+
             print("Writing outputs to: ", output_file)
             pkl.dump(outputs, open(output_file,'wb'))
 
@@ -250,8 +302,8 @@ def inference_kde_nll(cfg, epoch, model, dataloader, device, logger=None):
         for iters, batch in enumerate(tqdm(dataloader), start=1):
             X_global = batch['input_x'].to(device)
             y_global = batch['target_y']
-            img_path = batch['cur_image_file']
-            resolution = batch['pred_resolution'].numpy()
+            # img_path = batch['cur_image_file'] #ADDED
+            # resolution = batch['pred_resolution'].numpy()
             # For ETH_UCY dataset only
             if cfg.DATASET.NAME in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
                 input_x = batch['input_x_st'].to(device)
@@ -262,7 +314,7 @@ def inference_kde_nll(cfg, epoch, model, dataloader, device, logger=None):
                 input_x = X_global
                 neighbors_st, adjacency, first_history_indices = None, None, None
             
-            pred_goal, pred_traj, _, _, _ = model(input_x, 
+            pred_goal, pred_traj, _, _, _ = model(  input_x, 
                                                     neighbors_st=neighbors_st,
                                                     adjacency=adjacency,
                                                     z_mode=False, 

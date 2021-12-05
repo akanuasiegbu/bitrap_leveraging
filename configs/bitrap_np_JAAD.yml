@@ -3,7 +3,7 @@ CKPT_DIR: 'checkpoints/JAAD_checkpoints/goal_cvae_checkpoints/'
 OUT_DIR: 'outputs/JAAD_outputs/goal_cvae_outputs'
 DEVICE: 'cuda'
 METHOD: 'BiTraPNP'
-VISUALIZE: True
+VISUALIZE: False #added/changed
 MODEL:
   IMG_SIZE: (256,256)
   BEST_OF_MANY: True
@@ -11,7 +11,8 @@ MODEL:
   LATENT_DIST: 'gaussian' 
   LATENT_DIM: 32 
 
-  PRED_LEN: 45 # input and pred_len is defined in 30FPS
+  # PRED_LEN: 45 # input and pred_len is defined in 30FPS
+  PRED_LEN: 5 # input and pred_len is defined in 30FPS
   GLOBAL_EMBED_SIZE: 256
   GLOBAL_HIDDEN_SIZE:  256
   GLOBAL_INPUT_DIM: 4
@@ -28,12 +29,18 @@ MODEL:
   DEC_OUTPUT_DIM: 4
 DATASET:
   NAME: 'JAAD'
-  ROOT: 'data/JAAD/'
-  TRAJECTORY_PATH: 'data/JAAD/trajectories/'
+  # NAME: 'Avenue'
+  ROOT: '/mnt/workspace/datasets/JAAD/'
+#  ROOT: '/home/akanu/akanu/temp_pointer_storage_data/JAAD/'
+#  ROOT: '/home/akanu/temp_storage_data/JAAD/'
+  TRAJECTORY_PATH: '/mnt/workspace/datasets/JAAD/trajectories/'
+#  TRAJECTORY_PATH: '/home/akanu/akanu/temp_pointer_storage_data/JAAD/trajectories/'
+#  TRAJECTORY_PATH:  '/home/akanu/temp_storage_data/JAAD/trajectories/'
   BBOX_TYPE: 'cxcywh' # bbox is in cxcywh format
   NORMALIZE: 'zero-one' 
   MIN_BBOX: [0,0,0,0] # the min of cxcywh or x1x2y1y2
-  MAX_BBOX: [1920, 1080, 1920, 1080] # the max of cxcywh or x1x2y1y2
+  # MAX_BBOX: [1920, 1080, 1920, 1080] # the max of cxcywh or x1x2y1y2
+  MAX_BBOX: [640, 360, 640, 360] # the max of cxcywh or x1x2y1y2 for avenue
 DATALOADER:
   NUM_WORKERS: 24
 SOLVER:
@@ -42,4 +49,5 @@ SOLVER:
   LR: 0.001
   scheduler: 'plateau'
 TEST:
-  BATCH_SIZE: 1024
+  # BATCH_SIZE: 1024
+  BATCH_SIZE: 30

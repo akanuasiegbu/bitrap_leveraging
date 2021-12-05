@@ -7,6 +7,11 @@ import torch
 from .JAAD import JAADDataset as JAAD # dataset name + method name
 from .PIE import PIEDataset as PIE
 from .ETH_UCY import ETHUCYDataset
+# Added
+from .avenue import Avenue
+from config_for_my_data import hyparams, loc, exp
+
+# Added
 from torch.utils.data import DataLoader
 import pdb
 _DATA_LAYERS = {
@@ -55,6 +60,39 @@ def make_dataloader(cfg, split='train', logger=None):
         print("{} dataloader: {}".format(split, len(dataloader)))
     return dataloader
 
+def make_dataloader_custom_data(cfg, split='test', dataset=None, logger=None):
+    """
+    cfg: config file
+    split: test or train
+    dataset: avenue or st
+    """
+
+    if split == 'test':
+        batch_size = cfg.TEST.BATCH_SIZE
+        print('batch size:{}'.format(batch_size))
+    else:
+        batch_size = cfg.SOLVER.BATCH_SIZE
+
+    
+    dataloader_params ={
+            "batch_size": batch_size,
+            "shuffle":split == 'train',
+            "num_workers": cfg.DATALOADER.NUM_WORKERS,
+            "collate_fn": collate_dict,
+            }
+    train_file =  loc['data_load'][dataset]['train_file']
+    test_file =  loc['data_load'][dataset]['test_file']
+
+    
+    dataset = Avenue(cfg, split, train_file, test_file)
+    print('*'*20)
+    print('len of dataset {}'.format(len(dataset.data['frame_y'])))
+    dataloader = DataLoader(dataset, **dataloader_params)
+    if hasattr(logger, 'info'):
+        logger.info("{} dataloader: {}".format(split, len(dataloader)))
+    else:
+        print("{} dataloader: {}".format(split, len(dataloader)))
+    return dataloader
 def collate_dict(batch):
     '''
     batch: a list of dict

@@ -26,43 +26,61 @@ Run following command to add bitrap path to the PYTHONPATH
 
 One can also use docker with `docker/Dockerfile`. 
 
-## Training
-Users can train the BiTraP models on JAAD, PIE or ETH-UCY dataset easily by runing the following command:
-```
-python tools/train.py --config_file **DIR_TO_THE_YML_FILE** 
-```
-To train on [JAAD](http://data.nvision2.eecs.yorku.ca/JAAD_dataset/) or [PIE](http://data.nvision2.eecs.yorku.ca/PIE_dataset/) dataset, the users need to download the dataset from their original webpage and follow their directions to extract pedestrian trajectory files ('.pkl'). The trajectories should locate at the `DATASET.TRAJECTORY_PATH` in the configuration file.
+## Step 1: Download Dataset
+ * The extracted bounding box trajectories for Avenue and ShanghaiTech with the anomaly labels appended can be found [here](https://drive.google.com/drive/folders/1MNpbhB9LS7k0X_fK8BZWqGRoVfPxANZl?usp=sharing) .
+ * To want to recreate the input bounding box trajectory 
+   * Download [Avenue](http://www.cse.cuhk.edu.hk/leojia/projects/detectabnormal/dataset.html) and [ShanghaiTech](https://svip-lab.github.io/dataset/campus_dataset.html) dataset 
+   * Use [Deep-SORT-YOLOv4](https://github.com/LeonLok/Deep-SORT-YOLOv4/tree/a4b7d2e1263e6f1af63381a24436c5db5a4b6e91) commit number a4b7d2e
+  
+ ## Step 2: Training
+ ### Training BiTrap Model
+*  For training BiTrap models refer forked repo [here](https://github.com/akanuasiegbu/bidireaction-trajectory-prediction).
 
-To train on ETH-UCY dataset, the users can download the trajectory files ('.pkl') from the [Trajectron++](https://github.com/StanfordASL/Trajectron-plus-plus) repo and put them at the `DATASET.TRAJECTORY_PATH` in the configuration file.
+Train on Avenue Dataset
+```
+python tools/train.py --config_file configs/avenue.yml
+```
+
+Train on ShanghaiTech Dataset
+```
+python  tools/train.py --config_file configs/st.yml
+```
 
 To train/inferece on CPU or GPU, simply add `DEVICE='cpu'` or  `DEVICE='cuda'`. By default we use GPU for both training and inferencing.
 
-## Inference 
-The checkpoints of our models trained on JAAD, PIE and ETH-UCY can be downloaded [here](https://drive.google.com/drive/folders/1MF-E6Td2BRizNrvIFcfsOl0LV2_BDQXB?usp=sharing).
+Note that you must set the input and output lengths to be the same in YML file used (```INPUT_LEN``` and ```PRED_LEN```) and ```bitrap/datasets/config_for_my_data.py``` (```input_seq``` and ```pred_seq```)
 
-### Bounding box trajectory prediction on JAAD and PIE
-We predict the bounding box coordinate trajectory for first-person (ego-centric) view JAAD and PIE datasets.
-Test on PIE dataset:
+ 
+ 
+ 
+ ## Step 3: Inference 
+##### Pretrained BiTrap Model:
+Trained BiTrap models for Avenue and ShanghiTech can be found [here](https://drive.google.com/drive/folders/1942GF9FIzoqTVOHyW2Qo86s3R1OOSnsg?usp=sharing) 
+
+##### BiTrap Inference
+To obtain BiTrap PKL files containing the pedestrain trajectory use commands below.
+Test on Avenue dataset:
 ```
-python tools/test.py --config_file configs/bitrap_np_PIE.yml CKPT_DIR **DIR_TO_CKPT**
-python tools/test.py --config_file configs/bitrap_gmm_PIE.yml CKPT_DIR **DIR_TO_CKPT**
+python tools/test.py --config_file configs/avenue.yml CKPT_DIR **DIR_TO_CKPT**
 ```
 
-Test on JAAD dataset:
+Test on ShanghaiTech dataset:
 ```
-python tools/test.py --config_file configs/bitrap_np_JAAD.yml CKPT_DIR **DIR_TO_CKPT**
-python tools/test.py --config_file configs/bitrap_gmm_JAAD.yml CKPT_DIR **DIR_TO_CKPT**
+python tools/test.py --config_file configs/st.yml CKPT_DIR **DIR_TO_CKPT**
 ```
-### Point trajectory prediction on ETH-UCY
-We predict the point coordinate trajectory for bird's-eye view ETH-UCY datasets.
-```
-python tools/test.py --config_file configs/bitrap_np_ETH.yml DATASET.NAME **NAME_OF_DATASET** CKPT_DIR **DIR_TO_CKPT**
-python tools/test.py --config_file configs/bitrap_gmm_ETH.yml DATASET.NAME **NAME_OF_DATASET** CKPT_DIR **DIR_TO_CKPT**
-```
+
+
+##### PKL Files
+ BiTrap pkl files can be found [here](https://drive.google.com/drive/folders/1ELYuty5kg-J14jrDH66Gv9rhn58O1t9I).
+ 
+ * Download the ```output_bitrap``` folder which contains the pkl file folders for Avenue and ShanghiTech dataset.
+ * Naming convention: ```in_3_out_3_K_1``` means input trajectory and output trajectory is set to 3. And K=1 means using Bitrap as unimodal.
+ 
+
 
 ## Citation
 
-If you found the repo is useful, please feel free to cite our papers:
+If you found the repo is useful, please feel free to cite:
 ```
 @article{yao2020bitrap,
   title={BiTraP: Bi-directional Pedestrian Trajectory Prediction with Multi-modal Goal Estimation},
